@@ -16,8 +16,6 @@
 
 #define BAR_LENGTH 20
 
-#define SAMPLE_RATE 44100
-
 typedef struct {
   float height;
   Color color;
