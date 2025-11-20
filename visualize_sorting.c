@@ -17,6 +17,14 @@
 #define BAR_LENGTH 20
 
 bool sorted = false;
+
+typedef struct {
+  size_t pass;
+  size_t index;
+} Bubble_sort;
+
+Bubble_sort b_sort = {0};
+
 typedef struct {
   float height;
   Color color;
@@ -39,35 +47,55 @@ void reset_bars(Bars *bs)
     ut_da_push(bs, ((Bar) {.height = rand()%SCREEN_HEIGHT, .color = WHITE}));
 }
 
+void bubble_sort(Bars *bs)
+{
+  if (b_sort.pass >= bs->count - 1) {
+    b_sort.pass = 0;
+    sorted = true;
+    return;
+  }
+  if (b_sort.index < bs->count - 1 - b_sort.pass) {
+    if (bs->items[b_sort.index].height > bs->items[b_sort.index + 1].height) {
+      SWAP(Bar, bs->items[b_sort.index], bs->items[b_sort.index + 1]);
+      bs->items[b_sort.index + 1].color = GREEN;
+    } else bs->items[b_sort.index].color = WHITE;
+
+    (b_sort.index)++;
+  } else {
+    bs->items[b_sort.index].color = GREEN;
+    b_sort.index = 0;
+    (b_sort.pass)++;
+  }
+}
+
 int main(void)
 {
   Bars bs = {0};
-
-  size_t i = 0;
-  size_t j = 0;
-  size_t k = 0;
-
   srand(time(0));
   reset_bars(&bs);
 
+  size_t k = 0;
   bool paused = false;
-  bool sorted = false;
 
   SetTraceLogLevel(LOG_ERROR);
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Visualize Sorting");
   SetTargetFPS(240);
 
-  // asm("int3");
   while(!WindowShouldClose()) {
 
-    if (IsKeyPressed(KEY_R)){
+    if (IsKeyPressed(KEY_R)) {
       reset_bars(&bs);
-      i = 0;
-      j = 0;
       k = 0;
       sorted = false;
+
+      // Bubble sort
+      {
+        b_sort.index = 0;
+        b_sort.pass = 0;
+      }
     }
     if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+
     BeginDrawing();
     {
       ClearBackground(WINDOW_COLOR);
@@ -80,27 +108,10 @@ int main(void)
           bs.items[k].color = WHITE;
           k++;
         }
-      }
-
-      if (!sorted) {
+      } else {
         if (!paused) {
-          if (bs.count > 1) {
-            if (j >= bs.count - 1) {
-              j = 0;
-              sorted = true;
-            }
-            if (i < bs.count - 1 - j) {
-              if (bs.items[i].height > bs.items[i + 1].height) {
-                SWAP(Bar, bs.items[i], bs.items[i + 1]);
-                bs.items[i + 1].color = GREEN;
-              } else bs.items[i].color = WHITE;
-              i++;
-            } else {
-              bs.items[i].color = GREEN;
-              i = 0;
-              j++;
-            }
-          }
+          if (bs.count < 2) continue;
+          bubble_sort(&bs);
         }
       }
       draw_bars(&bs);
