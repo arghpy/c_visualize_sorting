@@ -50,7 +50,7 @@ int main(void)
   reset_bars(&bs);
 
   bool paused = false;
-  bool finished = false;
+  bool sorted = false;
 
   SetTraceLogLevel(LOG_ERROR);
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Visualize Sorting");
@@ -64,19 +64,29 @@ int main(void)
       i = 0;
       j = 0;
       k = 0;
-      finished = false;
+      sorted = false;
     }
     if (IsKeyPressed(KEY_SPACE)) paused = !paused;
     BeginDrawing();
     {
       ClearBackground(WINDOW_COLOR);
 
-      if (!finished) {
+      // Remake bars white when sorting is finished, each FPS
+      if (sorted) {
+        if (k >= bs.count) {
+          k = 0;
+        } else {
+          bs.items[k].color = WHITE;
+          k++;
+        }
+      }
+
+      if (!sorted) {
         if (!paused) {
           if (bs.count > 1) {
             if (j >= bs.count - 1) {
               j = 0;
-              finished = true;
+              sorted = true;
             }
             if (i < bs.count - 1 - j) {
               if (bs.items[i].height > bs.items[i + 1].height) {
@@ -90,13 +100,6 @@ int main(void)
               j++;
             }
           }
-        }
-      } else {
-        if (k >= bs.count) {
-          k = 0;
-        } else {
-          bs.items[k].color = WHITE;
-          k++;
         }
       }
       draw_bars(&bs);
