@@ -16,6 +16,7 @@
 
 #define BAR_LENGTH 20
 
+bool sorted = false;
 typedef struct {
   float height;
   Color color;
