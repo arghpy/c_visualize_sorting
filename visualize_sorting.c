@@ -98,6 +98,7 @@ Bars merge(Bars *left, Bars *right)
   return merged;
 }
 
+// This I don't know yet how to visualize
 void merge_sort(Bars *bs)
 {
   if (bs->count == 1) return;
@@ -166,11 +167,7 @@ int main(void)
       } else {
         if (!paused) {
           if (bs.count < 2) continue;
-          // bubble_sort(&bs);
-          if (IsKeyPressed(KEY_ENTER)) {
-            merge_sort(&bs);
-            sorted = true;
-          }
+          bubble_sort(&bs);
         }
       }
       draw_bars(&bs);
