@@ -8,22 +8,81 @@
 #include <utils.h>
 
 #include <raylib.h>
+#include <raymath.h>
+
+#define FONT_SIZE 20
+#define FONT_POSITION ((Vector2) {20, 20})
 
 #define WINDOW_SCALE 100
 #define SCREEN_WIDTH (WINDOW_SCALE*16)
 #define SCREEN_HEIGHT (WINDOW_SCALE*9)
 #define WINDOW_COLOR ((Color) {18, 18, 18, 0xFF})
 
-#define BAR_LENGTH 20
-
 bool sorted = false;
+bool started_sorting = false;
+size_t BAR_LENGTH = 20;
+
+// Interactive colors
+Color default_color = WHITE;
+Color fps_color = BLUE;
+Color paused_color = WHITE;
 
 typedef struct {
-  size_t pass;
   size_t index;
+  size_t pass;
+  bool started;
+  char text[50];
+  Color color;
 } Bubble_sort;
 
-Bubble_sort b_sort = {0};
+Bubble_sort b_sort = {
+  .index = 0,
+  .pass = 0,
+  .started = false,
+  .text = "[1] Bubble sort",
+  .color = WHITE,
+};
+
+typedef struct {
+  size_t lower_bound;
+  size_t upper_bound;
+  bool up;
+  size_t index;
+  bool started;
+  char text[50];
+  Color color;
+} Cocktail_sort;
+
+Cocktail_sort c_sort = {
+  .lower_bound = 0,
+  .upper_bound = 0,
+  .up = true,
+  .index = 0,
+  .started = false,
+  .text = "[2] Cocktail sort",
+  .color = WHITE,
+};
+
+char fps_text[50] = {0};
+
+typedef struct {
+  char *text;
+  Color *color;
+} Text;
+
+Text *button_options[] = {
+  &((Text){ .text = b_sort.text,                   .color = &b_sort.color}),
+  &((Text){ .text = c_sort.text,                   .color = &c_sort.color}),
+  &((Text){ .text = "[space] pause",               .color = &paused_color }),
+  &((Text){ .text = "[r] reset array",             .color = &default_color }),
+  &((Text){ .text = "[left arrow] slow down",      .color = &default_color }),
+  &((Text){ .text = "[right arrow] speed up",      .color = &default_color }),
+  &((Text){ .text = "[up arrow] increase array",   .color = &default_color }),
+  &((Text){ .text = "[down arrow] decrease array", .color = &default_color }),
+};
+
+typedef ut_da_declare(Text) Options;
+Options options = {0};
 
 typedef struct {
   float height;
@@ -32,25 +91,52 @@ typedef struct {
 
 typedef ut_da_declare(Bar) Bars;
 
-void draw_bars(Bars *bs)
+void populate_options(Options *os)
 {
-  for (size_t i = 0; i < bs->count; i++) {
-    DrawRectangle(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height , bs->items[i].color);
-    DrawRectangleLines(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height , BLACK);
+  // First is always FPS
+  snprintf(fps_text, ARRAY_LEN(fps_text), "FPS %d, Elements: %ld", GetFPS(), SCREEN_WIDTH/BAR_LENGTH);
+  ut_da_push(os, ((Text) {.text = fps_text, .color = &fps_color}));
+
+  for (size_t i = 0; i < ARRAY_LEN(button_options); i++) {
+    ut_da_push(os, *button_options[i]);
   }
 }
 
-void reset_bars(Bars *bs)
+void draw_options(Options *os)
+{
+  for (size_t i = 0; i < os->count; i++)
+    DrawText(os->items[i].text, FONT_POSITION.x, FONT_POSITION.y + FONT_SIZE * i, FONT_SIZE, *os->items[i].color);
+}
+
+void draw_bars(Bars *bs)
+{
+  for (size_t i = 0; i < bs->count; i++) {
+    DrawRectangle(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height, bs->items[i].color);
+    DrawRectangleLines(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height, BLACK);
+  }
+}
+
+void reset_bars(Bars *bs, Options *os)
 {
   ut_da_reset(bs);
   for (size_t i = 0; i < SCREEN_WIDTH/BAR_LENGTH; i++)
-    ut_da_push(bs, ((Bar) {.height = rand()%SCREEN_HEIGHT, .color = WHITE}));
+    ut_da_push(bs, ((Bar) {.height = rand()%((int)(SCREEN_HEIGHT - FONT_POSITION.y - FONT_SIZE * os->count)), .color = WHITE}));
+}
+
+void reset_bubble_sort(void)
+{
+  b_sort.index = 0;
+  b_sort.pass = 0;
+  b_sort.started = false;
+  b_sort.color = WHITE;
+
+  started_sorting = b_sort.started;
 }
 
 void bubble_sort(Bars *bs)
 {
   if (b_sort.pass >= bs->count - 1) {
-    b_sort.pass = 0;
+    reset_bubble_sort();
     sorted = true;
     return;
   }
@@ -58,7 +144,10 @@ void bubble_sort(Bars *bs)
     if (bs->items[b_sort.index].height > bs->items[b_sort.index + 1].height) {
       SWAP(Bar, bs->items[b_sort.index], bs->items[b_sort.index + 1]);
       bs->items[b_sort.index + 1].color = GREEN;
-    } else bs->items[b_sort.index].color = WHITE;
+    } else {
+      bs->items[b_sort.index].color = WHITE;
+      bs->items[b_sort.index + 1].color = GREEN;
+    }
 
     (b_sort.index)++;
   } else {
@@ -124,6 +213,14 @@ void merge_sort(Bars *bs)
   ut_da_free(&tmp);
 }
 
+void print_bs(Bars *bs)
+{
+  printf("----------------------------------------\n");
+  for (size_t i = 0; i < bs->count; i++)
+    printf("%ld: %f\n", i, bs->items[i].height);
+  printf("----------------------------------------\n");
+}
+
 void reset_cocktail_sort(void)
 {
   c_sort.lower_bound = 0;
@@ -187,52 +284,112 @@ void cocktail_sort(Bars *bs)
     return;
   }
 }
+
 int main(void)
 {
+
+  populate_options(&options);
+
   Bars bs = {0};
   srand(time(0));
-  reset_bars(&bs);
+  reset_bars(&bs, &options);
 
   size_t k = 0;
   bool paused = false;
 
+  int FPS = 60;
   SetTraceLogLevel(LOG_ERROR);
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Visualize Sorting");
-  SetTargetFPS(240);
+  SetTargetFPS(FPS);
 
   while(!WindowShouldClose()) {
 
-    if (IsKeyPressed(KEY_R)) {
-      reset_bars(&bs);
+    paused_color = paused ? RED: WHITE;
+
+    if (IsKeyPressed(KEY_UP)) {
+      if (BAR_LENGTH > 3)
+        BAR_LENGTH -= 2;
+      reset_bars(&bs, &options);
+      k = 0;
+      sorted = false;
+      reset_bubble_sort();
+      reset_cocktail_sort();
+    }
+
+    if (IsKeyPressed(KEY_DOWN)) {
+      BAR_LENGTH += 2;
+      reset_bars(&bs, &options);
       k = 0;
       sorted = false;
 
-      // Bubble sort
-      {
-        b_sort.index = 0;
-        b_sort.pass = 0;
+      reset_bubble_sort();
+      reset_cocktail_sort();
+    }
+
+    if (IsKeyPressed(KEY_R)) {
+      reset_bars(&bs, &options);
+      k = 0;
+      sorted = false;
+
+      reset_bubble_sort();
+      reset_cocktail_sort();
+
+      started_sorting = false;
+    }
+
+    if (IsKeyPressed(KEY_LEFT)) {
+      if (FPS > 20) {
+        FPS -= 10;
+        SetTargetFPS(FPS);
       }
     }
+
+    if (IsKeyPressed(KEY_RIGHT)) {
+      FPS += 10;
+      SetTargetFPS(FPS);
+    }
+
     if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+
+    if (IsKeyPressed(KEY_ONE) && !started_sorting && !sorted) {
+      b_sort.started = true;
+      b_sort.color = GREEN;
+      started_sorting = b_sort.started;
+    }
+    if (IsKeyPressed(KEY_TWO) && !started_sorting && !sorted) {
+      c_sort.started = true;
+      c_sort.color = GREEN;
+      started_sorting = c_sort.started;
+    }
+
+    // Remake bars white when sorting is finished, each FPS
+    if (sorted) {
+      if (k >= bs.count) {
+        k = 0;
+      } else {
+        bs.items[k].color = WHITE;
+        k++;
+      }
+    } else {
+      if (!paused) {
+        if (bs.count < 2) continue;
+
+        if (b_sort.started)
+          bubble_sort(&bs);
+
+        if (c_sort.started)
+          cocktail_sort(&bs);
+      }
+    }
 
     BeginDrawing();
     {
       ClearBackground(WINDOW_COLOR);
 
-      // Remake bars white when sorting is finished, each FPS
-      if (sorted) {
-        if (k >= bs.count) {
-          k = 0;
-        } else {
-          bs.items[k].color = WHITE;
-          k++;
-        }
-      } else {
-        if (!paused) {
-          if (bs.count < 2) continue;
-          bubble_sort(&bs);
-        }
-      }
+      // Text
+      sprintf(options.items[0].text, "FPS %d, Elements: %ld", GetFPS(), SCREEN_WIDTH/BAR_LENGTH);
+      draw_options(&options);
+
       draw_bars(&bs);
     }
     EndDrawing();
