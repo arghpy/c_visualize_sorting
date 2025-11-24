@@ -17,7 +17,6 @@
 #define SCREEN_HEIGHT (WINDOW_SCALE*9)
 #define WINDOW_COLOR ((Color) {18, 18, 18, 0xFF})
 
-bool started_sorting = false;
 size_t BAR_LENGTH = 20;
 
 // Interactive colors
@@ -299,6 +298,7 @@ int main(void)
   size_t k = 0;
   bool paused = false;
   bool sorted = false;
+  bool started_sorting = false;
 
   while(!WindowShouldClose()) {
 
