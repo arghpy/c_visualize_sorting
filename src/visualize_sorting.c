@@ -5,10 +5,9 @@
 #include <stdbool.h>
 
 #define UT_IMPLEMENTATION
-#include <utils.h>
+#include "utils.h"
 
-#include <raylib.h>
-#include <raymath.h>
+#include "raylib.h"
 
 #define FONT_SIZE 20
 #define FONT_POSITION ((Vector2) {20, 20})
