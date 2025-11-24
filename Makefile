@@ -4,6 +4,14 @@ SRC     := ./src
 BUILD   := ./build
 SRC_OBJ := $(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(wildcard $(SRC)/*.c))
 
+OTHER_SRC := $(SRC)/other
+OTHER_OBJ := $(patsubst $(OTHER_SRC)/%.c,$(BUILD)/%.o,$(wildcard $(OTHER_SRC)/*.c))
+
+ALGORITHMS_SRC := $(SRC)/algorithms
+ALGORITHMS_OBJ := $(patsubst $(ALGORITHMS_SRC)/%.c,$(BUILD)/%.o,$(wildcard $(ALGORITHMS_SRC)/*.c))
+
+OBJS := $(SRC_OBJ) $(OTHER_OBJ) $(ALGORITHMS_OBJ)
+
 THIRDPARTY_INCLUDE_DIR := ./thirdparty
 
 RAYLIB         := $(THIRDPARTY_INCLUDE_DIR)/raylib-5.5_linux_amd64
@@ -24,12 +32,22 @@ TARGET        := $(BUILD)/visualize_sorting
 # default action. Builds target
 all: $(TARGET)
 
-$(TARGET): $(SRC_OBJ)
+$(TARGET): $(OBJS)
 	mkdir -p $(BUILD)
 	@echo "Linking $^..."
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
 $(BUILD)/%.o: $(SRC)/%.c
+	mkdir -p $(BUILD)
+	@echo "Linking $^..."
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/%.o: $(OTHER_SRC)/%.c
+	mkdir -p $(BUILD)
+	@echo "Linking $^..."
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/%.o: $(ALGORITHMS_SRC)/%.c
 	mkdir -p $(BUILD)
 	@echo "Linking $^..."
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
