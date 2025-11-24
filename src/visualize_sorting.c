@@ -132,14 +132,13 @@ void reset_bubble_sort(void)
   b_sort.pass = 0;
   b_sort.started = false;
   b_sort.color = WHITE;
-
-  started_sorting = b_sort.started;
 }
 
 void bubble_sort(Bars *bs)
 {
   if (b_sort.pass >= bs->count - 1) {
     reset_bubble_sort();
+    started_sorting = false;
     sorted = true;
     return;
   }
@@ -232,8 +231,6 @@ void reset_cocktail_sort(void)
   c_sort.index = 0;
   c_sort.started = false;
   c_sort.color = WHITE;
-
-  started_sorting = c_sort.started;
 }
 
 void cocktail_sort(Bars *bs)
@@ -283,6 +280,7 @@ void cocktail_sort(Bars *bs)
   } else {
     bs->items[c_sort.index].color = GREEN;
     reset_cocktail_sort();
+    started_sorting = false;
     sorted = true;
     return;
   }
@@ -313,19 +311,21 @@ int main(void)
         BAR_LENGTH -= 2;
       reset_bars(&bs, &menu);
       k = 0;
-      sorted = false;
       reset_bubble_sort();
       reset_cocktail_sort();
+      started_sorting = false;
+      sorted = false;
     }
 
     if (IsKeyPressed(KEY_DOWN)) {
       BAR_LENGTH += 2;
       reset_bars(&bs, &menu);
       k = 0;
-      sorted = false;
 
       reset_bubble_sort();
       reset_cocktail_sort();
+      started_sorting = false;
+      sorted = false;
     }
 
     if (IsKeyPressed(KEY_R)) {
@@ -335,8 +335,8 @@ int main(void)
 
       reset_bubble_sort();
       reset_cocktail_sort();
-
       started_sorting = false;
+      sorted = false;
     }
 
     if (IsKeyPressed(KEY_LEFT)) {

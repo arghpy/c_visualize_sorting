@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wextra -ggdb -O3
+CFLAGS := -Wall -Wextra -ggdb
 
 SRC     := ./src
 BUILD   := ./build
