@@ -80,8 +80,8 @@ Text *button_options[] = {
   &((Text){ .text = "[down arrow] decrease array", .color = &default_color }),
 };
 
-typedef ut_da_declare(Text) Options;
-Options options = {0};
+typedef ut_da_declare(Text) Menu;
+Menu menu = {0};
 
 typedef struct {
   float height;
@@ -90,36 +90,40 @@ typedef struct {
 
 typedef ut_da_declare(Bar) Bars;
 
-void populate_options(Options *os)
+void populate_options(Menu *m)
 {
+  int screen_width = GetScreenWidth();
   // First is always FPS
-  snprintf(fps_text, ARRAY_LEN(fps_text), "FPS %d, Elements: %ld", GetFPS(), SCREEN_WIDTH/BAR_LENGTH);
-  ut_da_push(os, ((Text) {.text = fps_text, .color = &fps_color}));
+  snprintf(fps_text, ARRAY_LEN(fps_text), "FPS %d, Elements: %ld", GetFPS(), screen_width/BAR_LENGTH);
+  ut_da_push(m, ((Text) {.text = fps_text, .color = &fps_color}));
 
   for (size_t i = 0; i < ARRAY_LEN(button_options); i++) {
-    ut_da_push(os, *button_options[i]);
+    ut_da_push(m, *button_options[i]);
   }
 }
 
-void draw_options(Options *os)
+void draw_options(Menu *m)
 {
-  for (size_t i = 0; i < os->count; i++)
-    DrawText(os->items[i].text, FONT_POSITION.x, FONT_POSITION.y + FONT_SIZE * i, FONT_SIZE, *os->items[i].color);
+  for (size_t i = 0; i < m->count; i++)
+    DrawText(m->items[i].text, FONT_POSITION.x, FONT_POSITION.y + FONT_SIZE * i, FONT_SIZE, *m->items[i].color);
 }
 
 void draw_bars(Bars *bs)
 {
+  int screen_height = GetScreenHeight();
   for (size_t i = 0; i < bs->count; i++) {
-    DrawRectangle(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height, bs->items[i].color);
-    DrawRectangleLines(i * BAR_LENGTH, SCREEN_HEIGHT - bs->items[i].height, BAR_LENGTH, bs->items[i].height, BLACK);
+    DrawRectangle(i * BAR_LENGTH, screen_height - bs->items[i].height, BAR_LENGTH, bs->items[i].height, bs->items[i].color);
+    DrawRectangleLines(i * BAR_LENGTH, screen_height - bs->items[i].height, BAR_LENGTH, bs->items[i].height, BLACK);
   }
 }
 
-void reset_bars(Bars *bs, Options *os)
+void reset_bars(Bars *bs, Menu *m)
 {
+  int screen_width = GetScreenWidth();
+  int screen_height = GetScreenHeight();
   ut_da_reset(bs);
-  for (size_t i = 0; i < SCREEN_WIDTH/BAR_LENGTH; i++)
-    ut_da_push(bs, ((Bar) {.height = rand()%((int)(SCREEN_HEIGHT - FONT_POSITION.y - FONT_SIZE * os->count)), .color = WHITE}));
+  for (size_t i = 0; i < screen_width/BAR_LENGTH; i++)
+    ut_da_push(bs, ((Bar) {.height = rand()%((int)(screen_height - FONT_POSITION.y - FONT_SIZE * m->count)), .color = WHITE}));
 }
 
 void reset_bubble_sort(void)
@@ -286,20 +290,19 @@ void cocktail_sort(Bars *bs)
 
 int main(void)
 {
-
-  populate_options(&options);
-
-  Bars bs = {0};
-  srand(time(0));
-  reset_bars(&bs, &options);
-
-  size_t k = 0;
-  bool paused = false;
-
   int FPS = 60;
   SetTraceLogLevel(LOG_ERROR);
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Visualize Sorting");
   SetTargetFPS(FPS);
+
+  populate_options(&menu);
+
+  Bars bs = {0};
+  srand(time(0));
+  reset_bars(&bs, &menu);
+
+  size_t k = 0;
+  bool paused = false;
 
   while(!WindowShouldClose()) {
 
@@ -308,7 +311,7 @@ int main(void)
     if (IsKeyPressed(KEY_UP)) {
       if (BAR_LENGTH > 3)
         BAR_LENGTH -= 2;
-      reset_bars(&bs, &options);
+      reset_bars(&bs, &menu);
       k = 0;
       sorted = false;
       reset_bubble_sort();
@@ -317,7 +320,7 @@ int main(void)
 
     if (IsKeyPressed(KEY_DOWN)) {
       BAR_LENGTH += 2;
-      reset_bars(&bs, &options);
+      reset_bars(&bs, &menu);
       k = 0;
       sorted = false;
 
@@ -326,7 +329,7 @@ int main(void)
     }
 
     if (IsKeyPressed(KEY_R)) {
-      reset_bars(&bs, &options);
+      reset_bars(&bs, &menu);
       k = 0;
       sorted = false;
 
@@ -385,9 +388,10 @@ int main(void)
     {
       ClearBackground(WINDOW_COLOR);
 
+      int screen_width = GetScreenWidth();
       // Text
-      sprintf(options.items[0].text, "FPS %d, Elements: %ld", GetFPS(), SCREEN_WIDTH/BAR_LENGTH);
-      draw_options(&options);
+      sprintf(menu.items[0].text, "FPS %d, Elements: %ld", GetFPS(), screen_width/BAR_LENGTH);
+      draw_options(&menu);
 
       draw_bars(&bs);
     }
