@@ -17,7 +17,6 @@
 #define SCREEN_HEIGHT (WINDOW_SCALE*9)
 #define WINDOW_COLOR ((Color) {18, 18, 18, 0xFF})
 
-bool sorted = false;
 bool started_sorting = false;
 size_t BAR_LENGTH = 20;
 
@@ -134,12 +133,11 @@ void reset_bubble_sort(void)
   b_sort.color = WHITE;
 }
 
-void bubble_sort(Bars *bs)
+void bubble_sort(Bars *bs, bool *sorted)
 {
   if (b_sort.pass >= bs->count - 1) {
     reset_bubble_sort();
-    started_sorting = false;
-    sorted = true;
+    *sorted = true;
     return;
   }
   if (b_sort.index < bs->count - 1 - b_sort.pass) {
@@ -233,7 +231,7 @@ void reset_cocktail_sort(void)
   c_sort.color = WHITE;
 }
 
-void cocktail_sort(Bars *bs)
+void cocktail_sort(Bars *bs, bool *sorted)
 {
   if (c_sort.lower_bound == 0 && c_sort.upper_bound == 0) {
     c_sort.lower_bound = 0;
@@ -280,8 +278,7 @@ void cocktail_sort(Bars *bs)
   } else {
     bs->items[c_sort.index].color = GREEN;
     reset_cocktail_sort();
-    started_sorting = false;
-    sorted = true;
+    *sorted = true;
     return;
   }
 }
@@ -301,6 +298,7 @@ int main(void)
 
   size_t k = 0;
   bool paused = false;
+  bool sorted = false;
 
   while(!WindowShouldClose()) {
 
@@ -372,15 +370,18 @@ int main(void)
         bs.items[k].color = WHITE;
         k++;
       }
+      reset_bubble_sort();
+      reset_cocktail_sort();
+      started_sorting = false;
     } else {
       if (!paused) {
         if (bs.count < 2) continue;
 
         if (b_sort.started)
-          bubble_sort(&bs);
+          bubble_sort(&bs, &sorted);
 
         if (c_sort.started)
-          cocktail_sort(&bs);
+          cocktail_sort(&bs, &sorted);
       }
     }
 
