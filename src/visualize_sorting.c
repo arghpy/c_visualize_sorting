@@ -8,6 +8,10 @@
 #include "utils.h"
 
 #include "raylib.h"
+#include "./other/include/bars.h"
+#include "./algorithms/include/bubble_sort.h"
+#include "./algorithms/include/cocktail_sort.h"
+// #include "./algorithms/include/merge_sort.h"
 
 #define FONT_SIZE 20
 #define FONT_POSITION ((Vector2) {20, 20})
@@ -17,48 +21,10 @@
 #define SCREEN_HEIGHT (WINDOW_SCALE*9)
 #define WINDOW_COLOR ((Color) {18, 18, 18, 0xFF})
 
-size_t BAR_LENGTH = 20;
-
 // Interactive colors
 Color default_color = WHITE;
 Color fps_color = BLUE;
 Color paused_color = WHITE;
-
-typedef struct {
-  size_t index;
-  size_t pass;
-  bool started;
-  char text[50];
-  Color color;
-} Bubble_sort;
-
-Bubble_sort b_sort = {
-  .index = 0,
-  .pass = 0,
-  .started = false,
-  .text = "[1] Bubble sort",
-  .color = WHITE,
-};
-
-typedef struct {
-  size_t lower_bound;
-  size_t upper_bound;
-  bool up;
-  size_t index;
-  bool started;
-  char text[50];
-  Color color;
-} Cocktail_sort;
-
-Cocktail_sort c_sort = {
-  .lower_bound = 0,
-  .upper_bound = 0,
-  .up = true,
-  .index = 0,
-  .started = false,
-  .text = "[2] Cocktail sort",
-  .color = WHITE,
-};
 
 char fps_text[50] = {0};
 
@@ -81,13 +47,6 @@ Text *button_options[] = {
 typedef ut_da_declare(Text) Menu;
 Menu menu = {0};
 
-typedef struct {
-  float height;
-  Color color;
-} Bar;
-
-typedef ut_da_declare(Bar) Bars;
-
 void populate_options(Menu *m)
 {
   int screen_width = GetScreenWidth();
@@ -106,15 +65,6 @@ void draw_options(Menu *m)
     DrawText(m->items[i].text, FONT_POSITION.x, FONT_POSITION.y + FONT_SIZE * i, FONT_SIZE, *m->items[i].color);
 }
 
-void draw_bars(Bars *bs)
-{
-  int screen_height = GetScreenHeight();
-  for (size_t i = 0; i < bs->count; i++) {
-    DrawRectangle(i * BAR_LENGTH, screen_height - bs->items[i].height, BAR_LENGTH, bs->items[i].height, bs->items[i].color);
-    DrawRectangleLines(i * BAR_LENGTH, screen_height - bs->items[i].height, BAR_LENGTH, bs->items[i].height, BLACK);
-  }
-}
-
 void reset_bars(Bars *bs, Menu *m)
 {
   int screen_width = GetScreenWidth();
@@ -122,164 +72,6 @@ void reset_bars(Bars *bs, Menu *m)
   ut_da_reset(bs);
   for (size_t i = 0; i < screen_width/BAR_LENGTH; i++)
     ut_da_push(bs, ((Bar) {.height = rand()%((int)(screen_height - FONT_POSITION.y - FONT_SIZE * m->count)), .color = WHITE}));
-}
-
-void reset_bubble_sort(void)
-{
-  b_sort.index = 0;
-  b_sort.pass = 0;
-  b_sort.started = false;
-  b_sort.color = WHITE;
-}
-
-void bubble_sort(Bars *bs, bool *sorted)
-{
-  if (b_sort.pass >= bs->count - 1) {
-    reset_bubble_sort();
-    *sorted = true;
-    return;
-  }
-  if (b_sort.index < bs->count - 1 - b_sort.pass) {
-    if (bs->items[b_sort.index].height > bs->items[b_sort.index + 1].height) {
-      SWAP(Bar, bs->items[b_sort.index], bs->items[b_sort.index + 1]);
-      bs->items[b_sort.index + 1].color = GREEN;
-    } else {
-      bs->items[b_sort.index].color = WHITE;
-      bs->items[b_sort.index + 1].color = GREEN;
-    }
-
-    (b_sort.index)++;
-  } else {
-    bs->items[b_sort.index].color = GREEN;
-    b_sort.index = 0;
-    (b_sort.pass)++;
-  }
-}
-
-Bars merge(Bars *left, Bars *right)
-{
-  Bars merged = {0};
-  size_t i = 0;
-  size_t j = 0;
-
-  while (i < left->count && j < right->count) {
-    if (left->items[i].height < right->items[j].height) {
-      ut_da_push(&merged, left->items[i]);
-      i++;
-    } else {
-      ut_da_push(&merged, right->items[j]);
-      j++;
-    }
-  }
-
-  // Add what was left
-  for (size_t k = i; k < left->count; k++)
-    ut_da_push(&merged, left->items[k]);
-
-  // Add what was right
-  for (size_t k = j; k < right->count; k++)
-    ut_da_push(&merged, right->items[k]);
-
-  ut_da_free(left);
-  ut_da_free(right);
-
-  return merged;
-}
-
-// This I don't know yet how to visualize
-void merge_sort(Bars *bs)
-{
-  if (bs->count == 1) return;
-
-  size_t middle = bs->count / 2;
-
-  // Left
-  Bars l = {0};
-  for (size_t i = 0; i < middle; i++)
-    ut_da_push(&l, bs->items[i]);
-
-  merge_sort(&l);
-
-  // Right
-  Bars r = {0};
-  for (size_t i = middle; i < bs->count; i++)
-    ut_da_push(&r, bs->items[i]);
-
-  merge_sort(&r);
-
-  Bars tmp = merge(&l, &r);
-  ut_da_copy(bs, &tmp);
-  ut_da_free(&tmp);
-}
-
-void print_bs(Bars *bs)
-{
-  printf("----------------------------------------\n");
-  for (size_t i = 0; i < bs->count; i++)
-    printf("%ld: %f\n", i, bs->items[i].height);
-  printf("----------------------------------------\n");
-}
-
-void reset_cocktail_sort(void)
-{
-  c_sort.lower_bound = 0;
-  c_sort.upper_bound = 0;
-  c_sort.up = true;
-  c_sort.index = 0;
-  c_sort.started = false;
-  c_sort.color = WHITE;
-}
-
-void cocktail_sort(Bars *bs, bool *sorted)
-{
-  if (c_sort.lower_bound == 0 && c_sort.upper_bound == 0) {
-    c_sort.lower_bound = 0;
-    c_sort.upper_bound = bs->count - 1;
-    c_sort.index = c_sort.lower_bound;
-  }
-
-  if (c_sort.lower_bound < c_sort.upper_bound) {
-    // Up
-    if (c_sort.up) {
-      if (c_sort.index < c_sort.upper_bound) {
-        if (bs->items[c_sort.index].height > bs->items[c_sort.index + 1].height) {
-          SWAP(Bar, bs->items[c_sort.index], bs->items[c_sort.index + 1]);
-          bs->items[c_sort.index + 1].color = GREEN;
-        } else {
-          bs->items[c_sort.index].color = WHITE;
-          bs->items[c_sort.index + 1].color = GREEN;
-        }
-        (c_sort.index)++;
-        return;
-      } else {
-        c_sort.upper_bound--;
-        c_sort.index = c_sort.upper_bound;
-        c_sort.up = false;
-      }
-    } else {
-      // Down
-      if (c_sort.index > c_sort.lower_bound) {
-        if (bs->items[c_sort.index].height < bs->items[c_sort.index - 1].height) {
-          SWAP(Bar, bs->items[c_sort.index], bs->items[c_sort.index - 1]);
-          bs->items[c_sort.index - 1].color = GREEN;
-        } else {
-          bs->items[c_sort.index].color = WHITE;
-          bs->items[c_sort.index - 1].color = GREEN;
-        }
-        (c_sort.index)--;
-        return;
-      } else {
-        c_sort.lower_bound++;
-        c_sort.index = c_sort.lower_bound;
-        c_sort.up = true;
-      }
-    }
-  } else {
-    bs->items[c_sort.index].color = GREEN;
-    reset_cocktail_sort();
-    *sorted = true;
-    return;
-  }
 }
 
 int main(void)
