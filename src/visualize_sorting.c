@@ -107,6 +107,13 @@ void reset_bars(Bars *bs, Font *font)
     ut_da_push(bs, ((Bar) {.height = rand()%((int)(screen_height - FONT_POSITION.y - font->baseSize * (int)ARRAY_LEN(quick_menu))), .color = WHITE}));
 }
 
+void reset_algorithms(void)
+{
+  reset_bubble_sort();
+  reset_cocktail_sort();
+  reset_insertion_sort();
+}
+
 int main(void)
 {
   int FPS = 60;
@@ -140,9 +147,7 @@ int main(void)
       k = 0;
       sorted = false;
 
-      reset_bubble_sort();
-      reset_cocktail_sort();
-      reset_insertion_sort();
+      reset_algorithms();
       started_sorting = false;
       sorted = false;
     }
@@ -152,8 +157,8 @@ int main(void)
         BAR_LENGTH -= 2;
       reset_bars(&bs, &font);
       k = 0;
-      reset_bubble_sort();
-      reset_cocktail_sort();
+
+      reset_algorithms();
       started_sorting = false;
       sorted = false;
     }
@@ -163,8 +168,7 @@ int main(void)
       reset_bars(&bs, &font);
       k = 0;
 
-      reset_bubble_sort();
-      reset_cocktail_sort();
+      reset_algorithms();
       started_sorting = false;
       sorted = false;
     }
@@ -205,8 +209,7 @@ int main(void)
         bs.items[k].color = WHITE;
         k++;
       }
-      reset_bubble_sort();
-      reset_cocktail_sort();
+      reset_algorithms();
       started_sorting = false;
     } else {
       if (!paused) {
