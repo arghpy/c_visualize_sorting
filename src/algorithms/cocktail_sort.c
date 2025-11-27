@@ -1,6 +1,6 @@
 #include "./include/cocktail_sort.h"
 
-Cocktail_sort c_sort = {
+Cocktail_sort cocktail_sort_state = {
   .lower_bound = 0,
   .upper_bound = 0,
   .up = true,
@@ -12,60 +12,60 @@ Cocktail_sort c_sort = {
 
 void reset_cocktail_sort(void)
 {
-  c_sort.lower_bound = 0;
-  c_sort.upper_bound = 0;
-  c_sort.up = true;
-  c_sort.index = 0;
-  c_sort.started = false;
-  c_sort.color = WHITE;
+  cocktail_sort_state.lower_bound = 0;
+  cocktail_sort_state.upper_bound = 0;
+  cocktail_sort_state.up = true;
+  cocktail_sort_state.index = 0;
+  cocktail_sort_state.started = false;
+  cocktail_sort_state.color = WHITE;
 }
 
 void cocktail_sort(Bars *bs, bool *sorted)
 {
-  if (c_sort.lower_bound == 0 && c_sort.upper_bound == 0) {
-    c_sort.lower_bound = 0;
-    c_sort.upper_bound = bs->count - 1;
-    c_sort.index = c_sort.lower_bound;
+  if (cocktail_sort_state.lower_bound == 0 && cocktail_sort_state.upper_bound == 0) {
+    cocktail_sort_state.lower_bound = 0;
+    cocktail_sort_state.upper_bound = bs->count - 1;
+    cocktail_sort_state.index = cocktail_sort_state.lower_bound;
   }
 
-  if (c_sort.lower_bound < c_sort.upper_bound) {
+  if (cocktail_sort_state.lower_bound < cocktail_sort_state.upper_bound) {
     // Up
-    if (c_sort.up) {
-      if (c_sort.index < c_sort.upper_bound) {
-        if (bs->items[c_sort.index].height > bs->items[c_sort.index + 1].height) {
-          SWAP(Bar, bs->items[c_sort.index], bs->items[c_sort.index + 1]);
-          bs->items[c_sort.index + 1].color = GREEN;
+    if (cocktail_sort_state.up) {
+      if (cocktail_sort_state.index < cocktail_sort_state.upper_bound) {
+        if (bs->items[cocktail_sort_state.index].height > bs->items[cocktail_sort_state.index + 1].height) {
+          SWAP(Bar, bs->items[cocktail_sort_state.index], bs->items[cocktail_sort_state.index + 1]);
+          bs->items[cocktail_sort_state.index + 1].color = GREEN;
         } else {
-          bs->items[c_sort.index].color = WHITE;
-          bs->items[c_sort.index + 1].color = GREEN;
+          bs->items[cocktail_sort_state.index].color = WHITE;
+          bs->items[cocktail_sort_state.index + 1].color = GREEN;
         }
-        (c_sort.index)++;
+        (cocktail_sort_state.index)++;
         return;
       } else {
-        c_sort.upper_bound--;
-        c_sort.index = c_sort.upper_bound;
-        c_sort.up = false;
+        cocktail_sort_state.upper_bound--;
+        cocktail_sort_state.index = cocktail_sort_state.upper_bound;
+        cocktail_sort_state.up = false;
       }
     } else {
       // Down
-      if (c_sort.index > c_sort.lower_bound) {
-        if (bs->items[c_sort.index].height < bs->items[c_sort.index - 1].height) {
-          SWAP(Bar, bs->items[c_sort.index], bs->items[c_sort.index - 1]);
-          bs->items[c_sort.index - 1].color = GREEN;
+      if (cocktail_sort_state.index > cocktail_sort_state.lower_bound) {
+        if (bs->items[cocktail_sort_state.index].height < bs->items[cocktail_sort_state.index - 1].height) {
+          SWAP(Bar, bs->items[cocktail_sort_state.index], bs->items[cocktail_sort_state.index - 1]);
+          bs->items[cocktail_sort_state.index - 1].color = GREEN;
         } else {
-          bs->items[c_sort.index].color = WHITE;
-          bs->items[c_sort.index - 1].color = GREEN;
+          bs->items[cocktail_sort_state.index].color = WHITE;
+          bs->items[cocktail_sort_state.index - 1].color = GREEN;
         }
-        (c_sort.index)--;
+        (cocktail_sort_state.index)--;
         return;
       } else {
-        c_sort.lower_bound++;
-        c_sort.index = c_sort.lower_bound;
-        c_sort.up = true;
+        cocktail_sort_state.lower_bound++;
+        cocktail_sort_state.index = cocktail_sort_state.lower_bound;
+        cocktail_sort_state.up = true;
       }
     }
   } else {
-    bs->items[c_sort.index].color = GREEN;
+    bs->items[cocktail_sort_state.index].color = GREEN;
     reset_cocktail_sort();
     *sorted = true;
     return;
