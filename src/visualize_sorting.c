@@ -13,7 +13,7 @@
 #include "./algorithms/include/cocktail_sort.h"
 // #include "./algorithms/include/merge_sort.h"
 
-#define FONT_SIZE 20
+#define FONT_SIZE 25
 #define FONT_POSITION ((Vector2) {20, 20})
 
 #define WINDOW_SCALE 100
