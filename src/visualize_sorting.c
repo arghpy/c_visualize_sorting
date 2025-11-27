@@ -33,9 +33,13 @@ typedef struct {
   Color *color;
 } Text;
 
-Text *button_options[] = {
+Text *algorithm_options[] = {
   &((Text){ .text = b_sort.text,                   .color = &b_sort.color}),
   &((Text){ .text = c_sort.text,                   .color = &c_sort.color}),
+};
+
+Text *button_options[] = {
+  &((Text){ .text = "[F5] show this menu",         .color = &default_color }),
   &((Text){ .text = "[space] pause",               .color = &paused_color }),
   &((Text){ .text = "[r] reset array",             .color = &default_color }),
   &((Text){ .text = "[left arrow] slow down",      .color = &default_color }),
@@ -49,29 +53,32 @@ Menu menu = {0};
 
 void populate_options(Menu *m)
 {
-  int screen_width = GetScreenWidth();
-  // First is always FPS
-  snprintf(fps_text, ARRAY_LEN(fps_text), "FPS %d, Elements: %ld", GetFPS(), screen_width/BAR_LENGTH);
-  ut_da_push(m, ((Text) {.text = fps_text, .color = &fps_color}));
+  for (size_t i = 0; i < ARRAY_LEN(algorithm_options); i++)
+    ut_da_push(m, *algorithm_options[i]);
 
-  for (size_t i = 0; i < ARRAY_LEN(button_options); i++) {
+  for (size_t i = 0; i < ARRAY_LEN(button_options); i++)
     ut_da_push(m, *button_options[i]);
+}
+
+void draw_options(Menu *m, Font *font, bool show_menu)
+{
+  size_t counter = show_menu ? m->count : ARRAY_LEN(algorithm_options);
+  for (size_t i = 0; i < counter; i++) {
+    Vector2 position = {
+      .x = FONT_POSITION.x,
+      .y = FONT_POSITION.y + font->baseSize * i,
+    };
+    DrawTextEx(*font, m->items[i].text, position, FONT_SIZE, 0, *m->items[i].color);
   }
 }
 
-void draw_options(Menu *m)
-{
-  for (size_t i = 0; i < m->count; i++)
-    DrawText(m->items[i].text, FONT_POSITION.x, FONT_POSITION.y + FONT_SIZE * i, FONT_SIZE, *m->items[i].color);
-}
-
-void reset_bars(Bars *bs, Menu *m)
+void reset_bars(Bars *bs, Menu *m, Font *font)
 {
   int screen_width = GetScreenWidth();
   int screen_height = GetScreenHeight();
   ut_da_reset(bs);
   for (size_t i = 0; i < screen_width/BAR_LENGTH; i++)
-    ut_da_push(bs, ((Bar) {.height = rand()%((int)(screen_height - FONT_POSITION.y - FONT_SIZE * m->count)), .color = WHITE}));
+    ut_da_push(bs, ((Bar) {.height = rand()%((int)(screen_height - FONT_POSITION.y - font->baseSize * m->count)), .color = WHITE}));
 }
 
 int main(void)
@@ -81,25 +88,43 @@ int main(void)
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Visualize Sorting");
   SetTargetFPS(FPS);
 
+  char *font_path = "./thirdparty/assets/fonts/JetBrainsMono-Regular.ttf";
+  Font font = LoadFontEx(font_path, FONT_SIZE, NULL, 0);
+
   populate_options(&menu);
 
   Bars bs = {0};
   srand(time(0));
-  reset_bars(&bs, &menu);
+  reset_bars(&bs, &menu, &font);
 
   size_t k = 0;
   bool paused = false;
   bool sorted = false;
   bool started_sorting = false;
+  bool show_menu = false;
 
   while(!WindowShouldClose()) {
 
+    if (IsKeyPressed(KEY_F5)) show_menu = !show_menu;
+
+    if (IsKeyPressed(KEY_SPACE)) paused = !paused;
     paused_color = paused ? RED: WHITE;
+
+    if (IsKeyPressed(KEY_R)) {
+      reset_bars(&bs, &menu, &font);
+      k = 0;
+      sorted = false;
+
+      reset_bubble_sort();
+      reset_cocktail_sort();
+      started_sorting = false;
+      sorted = false;
+    }
 
     if (IsKeyPressed(KEY_UP)) {
       if (BAR_LENGTH > 3)
         BAR_LENGTH -= 2;
-      reset_bars(&bs, &menu);
+      reset_bars(&bs, &menu, &font);
       k = 0;
       reset_bubble_sort();
       reset_cocktail_sort();
@@ -109,19 +134,8 @@ int main(void)
 
     if (IsKeyPressed(KEY_DOWN)) {
       BAR_LENGTH += 2;
-      reset_bars(&bs, &menu);
+      reset_bars(&bs, &menu, &font);
       k = 0;
-
-      reset_bubble_sort();
-      reset_cocktail_sort();
-      started_sorting = false;
-      sorted = false;
-    }
-
-    if (IsKeyPressed(KEY_R)) {
-      reset_bars(&bs, &menu);
-      k = 0;
-      sorted = false;
 
       reset_bubble_sort();
       reset_cocktail_sort();
@@ -140,8 +154,6 @@ int main(void)
       FPS += 10;
       SetTargetFPS(FPS);
     }
-
-    if (IsKeyPressed(KEY_SPACE)) paused = !paused;
 
     if (IsKeyPressed(KEY_ONE) && !started_sorting && !sorted) {
       b_sort.started = true;
@@ -180,16 +192,12 @@ int main(void)
     BeginDrawing();
     {
       ClearBackground(WINDOW_COLOR);
-
-      int screen_width = GetScreenWidth();
-      // Text
-      sprintf(menu.items[0].text, "FPS %d, Elements: %ld", GetFPS(), screen_width/BAR_LENGTH);
-      draw_options(&menu);
-
+      draw_options(&menu, &font, show_menu);
       draw_bars(&bs);
     }
     EndDrawing();
   }
+  UnloadFont(font);
   CloseWindow();
   ut_da_free(&bs);
   return 0;
