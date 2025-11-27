@@ -11,6 +11,7 @@
 #include "./other/include/bars.h"
 #include "./algorithms/include/bubble_sort.h"
 #include "./algorithms/include/cocktail_sort.h"
+#include "./algorithms/include/insertion_sort.h"
 // #include "./algorithms/include/merge_sort.h"
 
 #define FONT_SIZE 25
@@ -34,8 +35,9 @@ typedef struct {
 } Text;
 
 Text *algorithm_options[] = {
-  &((Text){ .text = bubble_sort_state.text,   .color = &bubble_sort_state.color}),
-  &((Text){ .text = cocktail_sort_state.text, .color = &cocktail_sort_state.color}),
+  &((Text){ .text = bubble_sort_state.text,    .color = &bubble_sort_state.color}),
+  &((Text){ .text = cocktail_sort_state.text,  .color = &cocktail_sort_state.color}),
+  &((Text){ .text = insertion_sort_state.text, .color = &insertion_sort_state.color}),
 };
 
 Text *button_options[] = {
@@ -117,6 +119,7 @@ int main(void)
 
       reset_bubble_sort();
       reset_cocktail_sort();
+      reset_insertion_sort();
       started_sorting = false;
       sorted = false;
     }
@@ -165,6 +168,11 @@ int main(void)
       cocktail_sort_state.color = GREEN;
       started_sorting = cocktail_sort_state.started;
     }
+    if (IsKeyPressed(KEY_THREE) && !started_sorting && !sorted) {
+      insertion_sort_state.started = true;
+      insertion_sort_state.color = GREEN;
+      started_sorting = insertion_sort_state.started;
+    }
 
     // Remake bars white when sorting is finished, each FPS
     if (sorted) {
@@ -186,6 +194,9 @@ int main(void)
 
         if (cocktail_sort_state.started)
           cocktail_sort(&bs, &sorted);
+
+        if (insertion_sort_state.started)
+          insertion_sort(&bs, &sorted);
       }
     }
 
