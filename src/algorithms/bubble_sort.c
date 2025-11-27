@@ -1,6 +1,6 @@
 #include "./include/bubble_sort.h"
 
-Bubble_sort b_sort = {
+Bubble_sort bubble_sort_state = {
   .index = 0,
   .pass = 0,
   .started = false,
@@ -10,32 +10,32 @@ Bubble_sort b_sort = {
 
 void reset_bubble_sort(void)
 {
-  b_sort.index = 0;
-  b_sort.pass = 0;
-  b_sort.started = false;
-  b_sort.color = WHITE;
+  bubble_sort_state.index = 0;
+  bubble_sort_state.pass = 0;
+  bubble_sort_state.started = false;
+  bubble_sort_state.color = WHITE;
 }
 
 void bubble_sort(Bars *bs, bool *sorted)
 {
-  if (b_sort.pass >= bs->count - 1) {
+  if (bubble_sort_state.pass >= bs->count - 1) {
     reset_bubble_sort();
     *sorted = true;
     return;
   }
-  if (b_sort.index < bs->count - 1 - b_sort.pass) {
-    if (bs->items[b_sort.index].height > bs->items[b_sort.index + 1].height) {
-      SWAP(Bar, bs->items[b_sort.index], bs->items[b_sort.index + 1]);
-      bs->items[b_sort.index + 1].color = GREEN;
+  if (bubble_sort_state.index < bs->count - 1 - bubble_sort_state.pass) {
+    if (bs->items[bubble_sort_state.index].height > bs->items[bubble_sort_state.index + 1].height) {
+      SWAP(Bar, bs->items[bubble_sort_state.index], bs->items[bubble_sort_state.index + 1]);
+      bs->items[bubble_sort_state.index + 1].color = GREEN;
     } else {
-      bs->items[b_sort.index].color = WHITE;
-      bs->items[b_sort.index + 1].color = GREEN;
+      bs->items[bubble_sort_state.index].color = WHITE;
+      bs->items[bubble_sort_state.index + 1].color = GREEN;
     }
 
-    (b_sort.index)++;
+    (bubble_sort_state.index)++;
   } else {
-    bs->items[b_sort.index].color = GREEN;
-    b_sort.index = 0;
-    (b_sort.pass)++;
+    bs->items[bubble_sort_state.index].color = GREEN;
+    bubble_sort_state.index = 0;
+    (bubble_sort_state.pass)++;
   }
 }

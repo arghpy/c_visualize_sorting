@@ -16,7 +16,7 @@ typedef struct {
   Color color;
 } Cocktail_sort;
 
-extern Cocktail_sort c_sort;
+extern Cocktail_sort cocktail_sort_state;
 
 void reset_cocktail_sort(void);
 void cocktail_sort(Bars *bs, bool *sorted);

@@ -14,7 +14,7 @@ typedef struct {
   Color color;
 } Bubble_sort;
 
-extern Bubble_sort b_sort;
+extern Bubble_sort bubble_sort_state;
 
 void reset_bubble_sort(void);
 void bubble_sort(Bars *bs, bool *sorted);

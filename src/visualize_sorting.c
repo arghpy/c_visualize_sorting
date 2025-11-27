@@ -34,8 +34,8 @@ typedef struct {
 } Text;
 
 Text *algorithm_options[] = {
-  &((Text){ .text = b_sort.text,                   .color = &b_sort.color}),
-  &((Text){ .text = c_sort.text,                   .color = &c_sort.color}),
+  &((Text){ .text = bubble_sort_state.text,   .color = &bubble_sort_state.color}),
+  &((Text){ .text = cocktail_sort_state.text, .color = &cocktail_sort_state.color}),
 };
 
 Text *button_options[] = {
@@ -156,14 +156,14 @@ int main(void)
     }
 
     if (IsKeyPressed(KEY_ONE) && !started_sorting && !sorted) {
-      b_sort.started = true;
-      b_sort.color = GREEN;
-      started_sorting = b_sort.started;
+      bubble_sort_state.started = true;
+      bubble_sort_state.color = GREEN;
+      started_sorting = bubble_sort_state.started;
     }
     if (IsKeyPressed(KEY_TWO) && !started_sorting && !sorted) {
-      c_sort.started = true;
-      c_sort.color = GREEN;
-      started_sorting = c_sort.started;
+      cocktail_sort_state.started = true;
+      cocktail_sort_state.color = GREEN;
+      started_sorting = cocktail_sort_state.started;
     }
 
     // Remake bars white when sorting is finished, each FPS
@@ -181,10 +181,10 @@ int main(void)
       if (!paused) {
         if (bs.count < 2) continue;
 
-        if (b_sort.started)
+        if (bubble_sort_state.started)
           bubble_sort(&bs, &sorted);
 
-        if (c_sort.started)
+        if (cocktail_sort_state.started)
           cocktail_sort(&bs, &sorted);
       }
     }
